@@ -1,4 +1,4 @@
-package org.prd.ecommers;
+package org.prd.ecommerce;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
