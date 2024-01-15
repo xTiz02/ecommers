@@ -16,7 +16,7 @@ import java.util.Map;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SimpleCordsFilter implements Filter {
 
-    private static final String clientAppUrl = "http://localhost:4200/*";
+    private static final String clientAppUrl = "https://*";
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         Filter.super.init(filterConfig);

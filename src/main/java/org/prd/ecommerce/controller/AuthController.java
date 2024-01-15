@@ -36,4 +36,9 @@ public class AuthController {
     public ResponseEntity<?> test(@PathVariable("id") Long id){
         return new ResponseEntity<>("Test",HttpStatus.OK);
     }
+
+    @GetMapping("/hellCheck")
+    public ResponseEntity<?> hellCheck(){
+        return ResponseEntity.ok("Tienes acceso a la api");
+    }
 }
