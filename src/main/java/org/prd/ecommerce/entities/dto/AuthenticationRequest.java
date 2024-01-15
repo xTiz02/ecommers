@@ -1,4 +1,4 @@
-package org.prd.ecommerce.entities;
+package org.prd.ecommerce.entities.dto;
 
 import lombok.Data;
 import lombok.ToString;

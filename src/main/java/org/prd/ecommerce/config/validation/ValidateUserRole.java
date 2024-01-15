@@ -17,7 +17,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Constraint(validatedBy = UserRoleValidation.class)//La anotacion sera validada por la clase UserRoleValidation
 public @interface ValidateUserRole {
     UserRole[] anyOf();//El valor de la anotacion sera un array de UserRole (enum) llamado anyOf (puede ser cualquier cosa)
-    String message() default "must be any of {anyOf}";
-    Class<?>[] groups() default {};
-    Class<? extends Payload>[] payload() default {};
+
+    String message() default "must be any of {anyOf}";//El mensaje de error por defecto
+
+    Class<?>[] groups() default {};//Los grupos de validacion
+
+    Class<? extends Payload>[] payload() default {};//La carga util de la anotacion
 }

@@ -9,12 +9,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-
+@Component
 public class JwtServiceImpl implements JwtService{
 
     public static final String SECRET = "1232463562451341241847918346918365981349817398461938649136491834691834691836491836498136491836498136498136498134691834698163498163498134";

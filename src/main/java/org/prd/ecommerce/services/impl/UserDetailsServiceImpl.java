@@ -1,4 +1,4 @@
-package org.prd.ecommerce.services;
+package org.prd.ecommerce.services.impl;
 
 
 import org.prd.ecommerce.entities.UserEntity;
@@ -11,12 +11,13 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-
+@Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserEntityRepository userEntityRepository;
@@ -28,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<UserEntity> usuario = userEntityRepository.findByUsername(username);
+        Optional<UserEntity> usuario = userEntityRepository.findByEmail(username);
 
         if(usuario.isEmpty()) {
             logger.error("Error en el Login: no existe el usuario '" + username + "' en el sistema!");

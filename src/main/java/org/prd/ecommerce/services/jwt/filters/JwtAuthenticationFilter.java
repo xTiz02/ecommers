@@ -2,16 +2,14 @@ package org.prd.ecommerce.services.jwt.filters;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.prd.ecommerce.entities.AuthenticationRequest;
+import org.prd.ecommerce.entities.dto.ApiResponse;
+import org.prd.ecommerce.entities.dto.ApiResponseBody;
+import org.prd.ecommerce.entities.dto.AuthenticationRequest;
 import org.prd.ecommerce.services.jwt.JwtService;
 import org.prd.ecommerce.services.jwt.JwtServiceImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,13 +85,18 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
 //se añade el token en la cabecera de la respuesta para que el navegador lo guarde en el local storage y lo envie en la cabecera de las peticiones que haga al servidor
         Map<String, Object> body = new HashMap<String, Object>();
-        body.put("token", token);
-
-        body.put("user", (User) authResult.getPrincipal());
-        body.put("mensaje", String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()) );
-
-        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
-        response.setStatus(200);
+        //body.put("token", token);
+        ApiResponseBody apiResponseBody = new ApiResponseBody(
+                String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()),
+                null,
+                authResult.getPrincipal(),
+                "ok",
+                HttpServletResponse.SC_OK);
+        //body.put("user", (User) authResult.getPrincipal());
+        //body.put("mensaje", String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()) );
+        ApiResponse apiResponse = new ApiResponse((new Date().toString()),apiResponseBody, request.getRequestURI());
+        response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+        response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
     }
 
@@ -100,11 +104,17 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
 
         Map<String, Object> body = new HashMap<String, Object>();
-        body.put("mensaje", "Error de autenticación: username o password incorrecto!");
-        body.put("error", failed.getMessage());
+        ApiResponseBody apiResponseBody = new ApiResponseBody(
+                failed.getMessage(),
+                null,
+                null,
+                "error",
+                HttpServletResponse.SC_UNAUTHORIZED);
+        ApiResponse apiResponse = new ApiResponse((new Date().toString()),apiResponseBody, request.getRequestURI());
 
-        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
-        response.setStatus(401);
+
+        response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
     }
 }
