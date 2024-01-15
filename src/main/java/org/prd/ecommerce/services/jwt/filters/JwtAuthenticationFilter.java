@@ -84,7 +84,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.addHeader("Access-Control-Expose-Headers", JwtServiceImpl.HEADER_STRING); //usar esto para que el cliente pueda ver los datos del encabezado
 
 //se añade el token en la cabecera de la respuesta para que el navegador lo guarde en el local storage y lo envie en la cabecera de las peticiones que haga al servidor
-        Map<String, Object> body = new HashMap<String, Object>();
+        //Map<String, Object> body = new HashMap<String, Object>();
         //body.put("token", token);
         ApiResponseBody apiResponseBody = new ApiResponseBody(
                 String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()),
@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 authResult.getPrincipal(),
                 "ok",
                 HttpServletResponse.SC_OK);
-        body.put("token", token);
+        //body.put("token", token);
         //body.put("mensaje", String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()) );
         ApiResponse apiResponse = new ApiResponse((new Date().toString()),apiResponseBody, request.getRequestURI());
         response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
