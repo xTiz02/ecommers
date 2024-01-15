@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 authResult.getPrincipal(),
                 "ok",
                 HttpServletResponse.SC_OK);
-        //body.put("user", (User) authResult.getPrincipal());
+        body.put("token", token);
         //body.put("mensaje", String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()) );
         ApiResponse apiResponse = new ApiResponse((new Date().toString()),apiResponseBody, request.getRequestURI());
         response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
