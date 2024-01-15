@@ -39,6 +39,6 @@ public class AuthController {
 
     @GetMapping("/hellCheck")
     public ResponseEntity<?> hellCheck(){
-        return ResponseEntity.ok("La api funciona correctamente");
+        return ResponseEntity.ok("La api funciona correctamente1");
     }
 }
