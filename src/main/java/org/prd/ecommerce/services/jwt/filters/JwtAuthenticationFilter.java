@@ -81,7 +81,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String token = jwtService.create(authResult);
         //agregar Access-Control-Expose-Headers, para que el navegador pueda acceder a la cabecera Authorization
         response.addHeader(JwtServiceImpl.HEADER_STRING, JwtServiceImpl.TOKEN_PREFIX + token);
-        //response.addHeader("Access-Control-Expose-Headers", jwtUtil.HEADER_STRING); usar esto para que el cliente pueda ver los datos del encabezado
+        response.addHeader("Access-Control-Expose-Headers", JwtServiceImpl.HEADER_STRING); //usar esto para que el cliente pueda ver los datos del encabezado
 
 //se añade el token en la cabecera de la respuesta para que el navegador lo guarde en el local storage y lo envie en la cabecera de las peticiones que haga al servidor
         Map<String, Object> body = new HashMap<String, Object>();
