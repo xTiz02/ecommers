@@ -10,7 +10,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class ApiResponse {
     private String tiempo;
-    private ApiResponseBody body;
+    private ApiResponseBody corps;
     private String url;
 
 

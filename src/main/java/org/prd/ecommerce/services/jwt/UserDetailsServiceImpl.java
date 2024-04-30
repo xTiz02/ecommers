@@ -1,7 +1,7 @@
-package org.prd.ecommerce.services.impl;
+package org.prd.ecommerce.services.jwt;
 
 
-import org.prd.ecommerce.entities.UserEntity;
+import org.prd.ecommerce.entities.entity.UserEntity;
 import org.prd.ecommerce.repository.UserEntityRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +45,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("Error en el Login: usuario '" + username + "' no tiene roles asignados!");
         }
 
-        return new User(usuario.get().getEmail(), usuario.get().getPassword(), usuario.get().isEnabled(), true, true, true, authorities);
+        return new User(usuario.get().getEmail(), usuario.get().getPassword(), usuario.get().isEnabled(), usuario.get().isAccountNonExpired(), usuario.get().isCredentialsNonExpired(), usuario.get().isAccountNonLocked(), authorities);
     }
 
 }

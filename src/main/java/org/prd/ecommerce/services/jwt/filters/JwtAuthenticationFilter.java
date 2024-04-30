@@ -7,34 +7,49 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
+import org.prd.ecommerce.config.util.enums.StatusType;
+import org.prd.ecommerce.controller.exceptions.controll.BadRequestException;
 import org.prd.ecommerce.entities.dto.ApiResponse;
 import org.prd.ecommerce.entities.dto.ApiResponseBody;
 import org.prd.ecommerce.entities.dto.AuthenticationRequest;
+import org.prd.ecommerce.entities.entity.Audit;
+import org.prd.ecommerce.repository.AuditRepository;
 import org.prd.ecommerce.services.jwt.JwtService;
 import org.prd.ecommerce.services.jwt.JwtServiceImpl;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.stereotype.Component;
+import org.w3c.dom.ls.LSOutput;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private AuthenticationManager authenticationManager;
-    private JwtService jwtService;
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtService jwtService) {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private AuditRepository auditRepository;
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtService jwtService, AuditRepository auditRepository) {
         this.authenticationManager = authenticationManager;
+        this.auditRepository = auditRepository;
         setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/api/auth/login", "POST"));
 
         this.jwtService = jwtService;
     }
+
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -61,11 +76,15 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 logger.info("Password desde request InputStream (raw): " + password);
 
             } catch (JsonParseException e) {
-                e.printStackTrace();
-            } catch (JsonMappingException e) {
-                e.printStackTrace();
+                responseError(response, request, "Malformed body data request1", e);
+                return null;
+            } catch (JsonMappingException e) {//
+                responseError(response, request, "Malformed body data request2", e);
+                return null;
             } catch (IOException e) {
-                e.printStackTrace();
+                responseError(response, request, "Malformed body data request3", e);
+                return null;
+
             }
         }
 
@@ -73,7 +92,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password);
 
-        return authenticationManager.authenticate(authToken);
+        return authenticationManager.authenticate(authToken);//se envia el token al AuthenticationManager para que lo valide
     }
 
     @Override
@@ -84,37 +103,86 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.addHeader("Access-Control-Expose-Headers", JwtServiceImpl.HEADER_STRING); //usar esto para que el cliente pueda ver los datos del encabezado
 
 //se añade el token en la cabecera de la respuesta para que el navegador lo guarde en el local storage y lo envie en la cabecera de las peticiones que haga al servidor
-        //Map<String, Object> body = new HashMap<String, Object>();
-        //body.put("token", token);
-        ApiResponseBody apiResponseBody = new ApiResponseBody(
-                String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()),
-                null,
-                authResult.getPrincipal(),
-                "ok",
-                HttpServletResponse.SC_OK);
-        //body.put("token", token);
-        //body.put("mensaje", String.format("Hola %s, has iniciado sesión con éxito!", ((User)authResult.getPrincipal()).getUsername()) );
-        ApiResponse apiResponse = new ApiResponse((new Date().toString()),apiResponseBody, request.getRequestURI());
-        response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
+        User user = (User) authResult.getPrincipal();
+        response.getWriter().write(new ObjectMapper().writeValueAsString(new ApiResponse(
+                (new Date().toString()),
+                new ApiResponseBody(String.format("Hola %s, has iniciado sesión con éxito!", user.getUsername()),
+                    null,
+                    authResult.getPrincipal(),
+                    StatusType.OK.name(),
+                    HttpServletResponse.SC_OK),
+                request.getRequestURI())));
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType("application/json");
+        auditRepository.save(new Audit(user.getUsername(), "login", null, new Date(), null, "User logged in successfully"));
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
 
-        Map<String, Object> body = new HashMap<String, Object>();
+        //AuthenticationException es una clase abstracta que se usa para manejar las excepciones de autenticacion como:
+        //BadCredentialsException, DisabledException, LockedException, etc
+        //se puede usar para manejar las excepciones de autenticacion personalizadas
+
+        //en el request podemos recuperar el username y password que se envio en la peticion por json
+        //String username = obtainUsername(request); por form-data
+
+
+        String mensaje = "",status = StatusType.ERROR.name();
+        if(failed instanceof BadCredentialsException) {
+            mensaje = "Error: El nombre de usuario o la contraseña son incorrectos";
+            status = StatusType.BAD_CREDENTIALS.name();
+        }
+        if (failed instanceof DisabledException) {
+            mensaje = "Error: La cuenta no esta habilitada";
+            status = StatusType.ACCOUNT_DISABLED.name();
+        }
+        if (failed instanceof LockedException) {
+            mensaje = "Error: La cuenta ha sido bloqueada";
+            status = StatusType.ACCOUNT_LOCKED.name();
+        }
+        if (failed instanceof AccountExpiredException) {
+            mensaje = "Error: La cuenta ha expirado";
+            status = StatusType.ACCOUNT_EXPIRED.name();
+        }
+        if (failed instanceof CredentialsExpiredException) {
+            mensaje = "Error: Las credenciales de la cuenta han expirado";
+            status = StatusType.CREDENTIALS_EXPIRED.name();
+        }
+        logger.warn(String.format("Authentication error: %s",mensaje));
         ApiResponseBody apiResponseBody = new ApiResponseBody(
                 failed.getMessage(),
                 null,
                 null,
-                "error",
+                status,
                 HttpServletResponse.SC_UNAUTHORIZED);
         ApiResponse apiResponse = new ApiResponse((new Date().toString()),apiResponseBody, request.getRequestURI());
 
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(apiResponse));
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+    }
+
+
+    public void responseError(HttpServletResponse response, HttpServletRequest request, String msg, Exception e){
+        logger.error("Error:",e);
+        try {
+
+            response.getWriter().write(new ObjectMapper().writeValueAsString(new ApiResponse(
+                    (new Date().toString()),
+                    new ApiResponseBody(
+                            String.format(msg),
+                            null,
+                            null,
+                            StatusType.REQUEST_DATA_INVALID.name(),
+                            HttpServletResponse.SC_BAD_REQUEST),
+                    request.getRequestURI())));
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         response.setContentType("application/json");
     }
 }

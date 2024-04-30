@@ -1,8 +1,8 @@
-package org.prd.ecommerce.config.validation;
+package org.prd.ecommerce.config.util.validation;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.prd.ecommerce.enums.UserRole;
+import org.prd.ecommerce.config.util.enums.UserRole;
 
 import java.util.Arrays;
 

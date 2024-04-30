@@ -21,7 +21,7 @@ public class JwtServiceImpl implements JwtService{
     public static final String SECRET = "1232463562451341241847918346918365981349817398461938649136491834691834691836491836498136491836498136498136498134691834698163498163498134";
     public static final String TOKEN_PREFIX = "Bearer "; // prefijo del token en la cabecera de la petición
     public static final String HEADER_STRING = "Authorization";
-    public static final long EXPIRATION_DATE = 14000000L;
+    public static final long EXPIRATION_DATE = 14000000L;//4 horas
 
 
     @Override
@@ -92,4 +92,11 @@ public class JwtServiceImpl implements JwtService{
         }
         return null;
     }
+
+    @Override
+    public void expireToken(String token) {
+        getClaims(token).setExpiration(new Date());//se cambia la fecha de expiracion del token a la fecha actual
+    }
+
+
 }

@@ -1,13 +1,11 @@
-package org.prd.ecommerce.entities;
+package org.prd.ecommerce.entities.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import lombok.*;
-import org.hibernate.validator.constraints.Length;
-import org.prd.ecommerce.config.validation.ValidateUserRole;
+import org.prd.ecommerce.config.util.validation.ValidateUserRole;
 import org.prd.ecommerce.entities.dto.UserEntityDto;
-import org.prd.ecommerce.enums.UserRole;
+import org.prd.ecommerce.config.util.enums.UserRole;
 
 @Entity
 @Table(name = "users")
@@ -35,23 +33,24 @@ public class UserEntity {
     private String password;
 
 
-    @ValidateUserRole(anyOf = {UserRole.ADMIN,UserRole.CUSTOMER},message = "The field must be any of {anyOf}")
+
     @Column(nullable = false)
     private UserRole userRole;
 
     @Column(nullable = false)
     private boolean enabled;
 
-    @Lob//indica que el campo es de tipo blob
-    @Column(columnDefinition = "longblob")
-    private byte[] img;
+    @Column(nullable = false)
+    private boolean accountNonExpired;
 
-    public UserEntity( @Valid  UserEntityDto userEntityDto){
-        this.nickname = userEntityDto.getNickname();
-        this.email = userEntityDto.getEmail();
-        this.password = userEntityDto.getPassword();
-        this.userRole = userEntityDto.getUserRole();
-        this.enabled = userEntityDto.isEnabled();
-        this.img = userEntityDto.getImg();
-    }
+    @Column(nullable = false)
+    private boolean accountNonLocked;
+
+    @Column(nullable = false)
+    private boolean credentialsNonExpired;
+
+
+    private String url;
+
+
 }

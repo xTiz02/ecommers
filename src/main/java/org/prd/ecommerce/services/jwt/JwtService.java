@@ -19,5 +19,10 @@ public interface JwtService {
 
     Date extractExpiration(String token);
 
-    public String resolve(String token);
+    public String resolve(String token);//elimina el prefijo del token y devuelve el token sin el prefijo
+
+    public void expireToken(String token);
+
+
 }
+

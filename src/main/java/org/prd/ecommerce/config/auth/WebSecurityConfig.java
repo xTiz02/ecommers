@@ -1,13 +1,15 @@
 package org.prd.ecommerce.config.auth;
 
-import org.prd.ecommerce.enums.UserRole;
-import org.prd.ecommerce.services.impl.UserDetailsServiceImpl;
+import org.prd.ecommerce.config.util.enums.UserRole;
+import org.prd.ecommerce.repository.AuditRepository;
+import org.prd.ecommerce.services.jwt.UserDetailsServiceImpl;
 import org.prd.ecommerce.services.jwt.JwtService;
 import org.prd.ecommerce.services.jwt.filters.JwtAuthenticationFilter;
 import org.prd.ecommerce.services.jwt.filters.JwtAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,7 +28,7 @@ public class WebSecurityConfig {
     private JwtService jwtService;
 
     @Autowired
-    private UserDetailsServiceImpl userDetailsService;
+    private AuditRepository auditRepository;
 
     @Autowired
     private AuthenticationConfiguration authenticationConfiguration;
@@ -40,6 +42,8 @@ public class WebSecurityConfig {
                 .sessionManagement( managementConfig->managementConfig.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .authorizeHttpRequests(authConfig->{
                     authConfig.requestMatchers("/api/auth/**").permitAll();
+                    authConfig.requestMatchers("/api/customer/**").permitAll();
+                     authConfig.requestMatchers("/api/customer/logged/**").hasAnyAuthority(UserRole.CUSTOMER.name(),UserRole.ADMIN.name());
                     authConfig.requestMatchers("/api/admin/**").hasAnyAuthority(UserRole.ADMIN.name());
                     //authConfig.requestMatchers(HttpMethod.GET,"/api/auth/login").permitAll();
                     authConfig.anyRequest().authenticated();
@@ -73,18 +77,15 @@ public class WebSecurityConfig {
         return authFilter;
     }
     public JwtAuthenticationFilter customFilter2() throws Exception {
-        JwtAuthenticationFilter authFilter = new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager(),jwtService);
+        JwtAuthenticationFilter authFilter = new JwtAuthenticationFilter(authenticationConfiguration.getAuthenticationManager(),jwtService,auditRepository);
         return authFilter;
     }
-
-
-
-
-
 
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
 }
